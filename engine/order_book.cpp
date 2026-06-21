@@ -1,11 +1,38 @@
 #include "order_book.h"
 #include <chrono>
+#include <algorithm>
+
+uint64_t current_time_ns(){
+    return std::chrono::duration_cast<std::chrono::nanoseconds>
+            (std::chrono::steady_clock::now().time_since_epoch()).count();
+}
+
+template<typename MapType>
+bool OrderBook::performCancel(MapType& book_side , double price , uint64_t order_id){
+    auto price_it = book_side.find(price);
+    if (price_it != book_side.end()){
+        std::deque<Order>& ordQueue = price_it->second;
+
+        for (auto it = ordQueue.begin() ; it!=ordQueue.end() ; ++it){
+            if (it->order_id == order_id){
+                ordQueue.erase(it);
+
+                if (ordQueue.empty()){
+                    book_side.erase(price_it);
+                }
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
 
 template <typename MatchMap, typename RestMap>
-std::vector<Trade> matchLimit(Order ord, MatchMap& match_map, RestMap& rest_map, bool is_buy){
+std::vector<Trade> OrderBook::matchLimit(Order ord, MatchMap& match_map, RestMap& rest_map, bool is_buy){
     int rem_quantity = ord.quantity;
 
-    vector<Trade> ret_trades;
+    std::vector<Trade> ret_trades;
     while (rem_quantity > 0 && !match_map.empty()){ 
         Trade trd;
 
@@ -23,7 +50,7 @@ std::vector<Trade> matchLimit(Order ord, MatchMap& match_map, RestMap& rest_map,
         }
         
 
-        int match_size = min(rem_quantity , rest_front.quantity);
+        int match_size = std::min(rem_quantity , rest_front.quantity);
         rem_quantity -= match_size;
         rest_front.quantity -= match_size;
 
@@ -33,16 +60,16 @@ std::vector<Trade> matchLimit(Order ord, MatchMap& match_map, RestMap& rest_map,
         trd.sell_order_id = is_buy ? rest_front.order_id : ord.order_id;
         trd.price = rest_front.price;
         trd.quantity = match_size;
-        trd.timestamp_ns =  std::chrono::duration_cast<std::chrono::nanoseconds>
-                            (std::chrono::steady_clock::now().time_since_epoch()).count();
+        trd.timestamp_ns =  current_time_ns();
 
         ret_trades.push_back(trd);
 
         if (rest_front.quantity == 0){
+            uint64_t dead_order_id = rest_front.order_id;
             rest_orders.pop_front();
-            index_.erase(rest_front.order_id);
+            index_.erase(dead_order_id);
         }
-        if (match_map[rest_price].empty()){
+        if (rest_orders.empty()){
             match_map.erase(rest_price); 
         }
     }
@@ -61,10 +88,10 @@ std::vector<Trade> matchLimit(Order ord, MatchMap& match_map, RestMap& rest_map,
 }
 
 template <typename MatchMap>
-        std::vector<Trade> matchMarket(Order ord, MatchMap& match_map, bool is_buy){
+        std::vector<Trade> OrderBook::matchMarket(Order ord, MatchMap& match_map, bool is_buy){
     int rem_quantity = ord.quantity;
 
-    vector<Trade> ret_trades;
+    std::vector<Trade> ret_trades;
     while (rem_quantity > 0 && !match_map.empty()){ 
         Trade trd;
 
@@ -73,7 +100,7 @@ template <typename MatchMap>
         
         // no need of checking constraint . for match type we want to do until match empty.
 
-        int match_size = min(rem_quantity , rest_front.quantity);
+        int match_size = std::min(rem_quantity , rest_front.quantity);
         rem_quantity -= match_size;
         rest_front.quantity -= match_size;
 
@@ -83,16 +110,16 @@ template <typename MatchMap>
         trd.sell_order_id = is_buy ? rest_front.order_id : ord.order_id;
         trd.price = rest_front.price;
         trd.quantity = match_size;
-        trd.timestamp_ns =  std::chrono::duration_cast<std::chrono::nanoseconds>
-                            (std::chrono::steady_clock::now().time_since_epoch()).count();
+        trd.timestamp_ns =  current_time_ns();
 
         ret_trades.push_back(trd);
 
         if (rest_front.quantity == 0){
+            uint64_t dead_order_id = rest_front.order_id;
             rest_orders.pop_front();
-            index_.erase(rest_front.order_id);
+            index_.erase(dead_order_id);
         }
-        if (match_map[rest_price].empty()){
+        if (rest_orders.empty()){
             match_map.erase(rest_price); 
         }
     }
@@ -103,6 +130,10 @@ template <typename MatchMap>
 }
 
 std::vector<Trade> OrderBook::addOrder(const Order& o){
+    if (o.type == OrderType::CANCEL) {
+        cancelOrder(o.order_id);
+        return {};
+    }
     if (o.type == OrderType::LIMIT){
         if (o.side == Side::BUY){
             return matchLimit(o , asks_ , bids_ , true); // BUY -> opponents / matchmap = sellers (asks_ map) home / restmap = buyers (bids_ map)
@@ -118,42 +149,26 @@ std::vector<Trade> OrderBook::addOrder(const Order& o){
             return matchMarket(o , bids_ , false);
         }
     }
+    return {};
 }
 
 
 bool OrderBook::cancelOrder(uint64_t order_id){
-    if (index_.find(order_id)==index_.end()){
+    auto index_it = index_.find(order_id);
+    if (index_it == index_.end()){
         return false;
     }
 
-    OrderLocation ordloc = index_[order_id];
+    const OrderLocation& ordloc = index_it->second;
     double price = ordloc.price;
+    Side side = ordloc.side;
 
-    index_.erase(order_id);
+    index_.erase(index_it);
 
-    if (ordloc.side == Side::BUY){
-        for (auto it = bids_[price].begin() ; it!=bids_[price].end() ; ++it){
-            Order ord = *it;
-            if (ord.order_id == order_id){
-                bids_[price].erase(it);
-                if (bids_[price].empty()){
-                    bids_.erase(price);
-                }
-                break;
-            }
-        }
+    if (side == Side::BUY){
+        return performCancel(bids_ ,price , order_id);
     } else{
-        for (auto it : asks_[price].begin() ; it!=asks_[price].end() ; ++it){
-            Order ord = *it;
-            if (ord.order_id == order_id){
-                asks_[price].erase(it);
-                if (asks_[price].empty()){
-                    asks_.erase(price);
-                }
-                break;
-            }
-        }
+        return performCancel(asks_ , price , order_id);
     }
 
-    return true;
 }

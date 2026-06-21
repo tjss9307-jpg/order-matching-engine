@@ -2,6 +2,7 @@
 #include <cstdint>
 
 enum class OrderType {MARKET , LIMIT , CANCEL};
+// OrderType::CANCEL flows through addOrder and is forwarded directly to cancelOrder.
 enum class Side {BUY , SELL};
 
 struct Order{
