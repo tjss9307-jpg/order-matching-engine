@@ -16,6 +16,8 @@ public:
     bool cancelOrder(uint64_t order_id);
 
 private:
+    template <typename MapType>
+        bool performCancel(MapType& book_side, double price, uint64_t order_id);
     template <typename MatchMap, typename RestMap>
         std::vector<Trade> matchLimit(Order ord, MatchMap& match_map, RestMap& rest_map, bool is_buy);
     template <typename MatchMap>
