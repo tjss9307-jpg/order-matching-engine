@@ -4,6 +4,7 @@
 #include <deque>
 #include <unordered_map>
 #include <vector>
+#include <iostream>
 
 struct OrderLocation {
     Side side;
@@ -12,6 +13,7 @@ struct OrderLocation {
 
 class OrderBook {
 public:
+    void printBook();
     std::vector<Trade> addOrder(const Order& o);
     bool cancelOrder(uint64_t order_id);
 
