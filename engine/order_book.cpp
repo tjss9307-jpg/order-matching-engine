@@ -3,30 +3,28 @@
 #include <algorithm>
 
 void OrderBook::printBook(){
-    std::cout << "\n=== ORDER BOOK ===\n";
+    std::cout << "\n===// ORDER BOOK //===\n";
     
-    std::cout << "--- ASKS (SELLERS) ---\n";
+    std::cout << "--- ASKS  ---\n";
     for (auto it = asks_.begin(); it != asks_.end(); ++it) {
         std::cout << "Price: " << it->first << " -> ";
         
         for (size_t i = 0; i < it->second.size(); ++i) {
-            std::cout << "[id:" << it->second[i].order_id 
-                      << " qty:" << it->second[i].quantity << "] ";
+            std::cout << "[id:" << it->second[i].order_id << " qty:" << it->second[i].quantity << "] ";
         }
         std::cout << "\n";
     }
 
-    std::cout << "--- BIDS (BUYERS) ---\n";
+    std::cout << "--- BIDS  ---\n";
     for (auto it = bids_.begin(); it != bids_.end(); ++it) {
         std::cout << "Price: " << it->first << " -> ";
         
         for (size_t i = 0; i < it->second.size(); ++i) {
-            std::cout << "[id:" << it->second[i].order_id 
-                      << " qty:" << it->second[i].quantity << "] ";
+            std::cout << "[id:" << it->second[i].order_id << " qty:" << it->second[i].quantity << "] ";
         }
         std::cout << "\n";
     }
-    std::cout << "==================\n";
+    std::cout << "/========================/\n";
 }
 
 uint64_t current_time_ns(){
