@@ -13,6 +13,7 @@ struct OrderLocation {
 
 class OrderBook {
 public:
+    void cleanBook();
     void printBook();
     std::vector<Trade> addOrder(const Order& o);
     bool cancelOrder(uint64_t order_id);
