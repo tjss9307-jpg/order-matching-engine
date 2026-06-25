@@ -11,9 +11,9 @@ void OrderBook::cleanBook(){
 }
 
 void OrderBook::printBook(){
-    std::cout << "\n=== ORDER BOOK ===\n";
+    std::cout << "\n====== ORDER BOOK ======\n";
     
-    std::cout << "=>ASKS  :---\n";
+    std::cout << "=>ASKS(SELLERS)  :---\n";
     for (auto it = asks_.begin(); it != asks_.end(); ++it) {
         std::cout << "Price: " << it->first << " -> ";
         
@@ -23,7 +23,7 @@ void OrderBook::printBook(){
         std::cout << "\n";
     }
 
-    std::cout << "=>BIDS  :---\n";
+    std::cout << "=>BIDS(BUYERS)  :---\n";
     for (auto it = bids_.begin(); it != bids_.end(); ++it) {
         std::cout << "Price: " << it->first << " -> ";
         
@@ -32,7 +32,7 @@ void OrderBook::printBook(){
         }
         std::cout << "\n";
     }
-    std::cout << "========================\n";
+    std::cout << "\n========================\n";
     std::cout << "\n";
 }
 
