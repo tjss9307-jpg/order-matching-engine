@@ -2,14 +2,6 @@
 #include <chrono>
 #include <algorithm>
 
-void OrderBook::cleanBook(){
-    asks_.clear();
-    bids_.clear();
-    index_.clear();
-    next_trade_id_ = 1;
-
-}
-
 void OrderBook::printBook(){
     std::cout << "\n====== ORDER BOOK ======\n";
     
@@ -32,7 +24,7 @@ void OrderBook::printBook(){
         }
         std::cout << "\n";
     }
-    std::cout << "\n========================\n";
+    std::cout << "========================\n";
     std::cout << "\n";
 }
 
