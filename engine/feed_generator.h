@@ -12,4 +12,4 @@ class feedGenerator {
         }
 
         void runLiveFeed(OrderQueue& ordQ, int num_orders);
-}
+};
