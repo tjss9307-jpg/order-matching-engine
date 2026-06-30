@@ -8,6 +8,7 @@
 #include <thread>
 #include <algorithm>
 #include <cstring>
+#include <iomanip>
 
 void batch_mode(){
     std::vector<std::vector<Order>> feeds = get_batch_test_feeds();
