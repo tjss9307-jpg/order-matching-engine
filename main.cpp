@@ -102,13 +102,19 @@ void live_feed_mode(){
 
     double throughput = (double)(total_orders) / wallClock_runtime_s;
 
-    std::cout << "Total Orders Processed: " << total_orders << "\n";
-    std::cout << "Total Trades Executes: " << total_trades << "\n";
-    std::cout << "Wall Clock Run Time: " << wallClock_runtime_ms << " ms" << "\n";
-    std::cout << "Throughput: " << throughput << " orders/second" << "\n";
-    std::cout << "p99.9 Latency: " << p99_9 << " ns" << "\n";
-    std::cout << "p99 Latency: " << p99 << " ns" << "\n";
-    std::cout << "p50 Latency: " << p50 << " ns" << "\n";
+    std::cout << "\n-- PERFORMANCE SUMMARY " << std::string(43, '-') << "\n";
+    std::cout << std::left << std::setw(17) << "Orders Processed" << " : " << total_orders << "\n";
+    std::cout << std::left << std::setw(17) << "Trades Executed"  << " : " << total_trades << "\n";
+    std::cout << std::left << std::setw(17) << "Wall Clock Time"  << " : " 
+            << std::fixed << std::setprecision(2) << (wallClock_runtime_ns / 1e6) << " ms\n";
+    std::cout << std::left << std::setw(17) << "Throughput"       << " : " 
+            << std::fixed << std::setprecision(2) << throughput << " orders/sec\n\n";
+
+    std::cout << "Latency Profile:\n";
+    std::cout << "  p50   : " << p50 << " ns\n";
+    std::cout << "  p99   : " << p99 << " ns\n";
+    std::cout << "  p99.9 : " << p99_9 << " ns\n";
+    std::cout << std::string(67, '-') << "\n";
 
 }
 
